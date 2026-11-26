@@ -69,6 +69,8 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap; /* PCF honours shadow.radius (adjustable blur) */
 area.appendChild(renderer.domElement);
+renderer.domElement.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;cursor:grab;';
+for (const c of area.querySelectorAll('canvas')) if (c !== renderer.domElement) c.style.display = 'none';
 renderer.debug.onShaderError = (gl, program, vs, fs) => {
 const log = (gl.getShaderInfoLog(vs) || '') + ' ' + (gl.getShaderInfoLog(fs) || '') + ' ' + (gl.getProgramInfoLog(program) || '');
 const msg = 'Shader error: ' + log.trim().slice(0, 400);
