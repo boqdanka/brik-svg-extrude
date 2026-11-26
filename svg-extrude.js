@@ -2673,23 +2673,24 @@ renderer.autoClear = true;
 }
 for (const k of ['ditherMode', 'ditherGrain', 'ditherAmt', 'ditherShadow', 'ditherNoise', 'ditherSpecks', 'ditherInk', 'ditherPaper', 'ditherSeed', 'ditherScope', 'ditherEdge', 'ditherCap', 'bgColor', 'bgGlobalOn', 'bgGlobalColor']) ST.onChange(k, updateDitherUniforms);
 ST.onChange('deformPreset', () => { updateDitherUniforms(); poke(2500); });
-let adEma = 16.7, adLast = 0, adCool = 0;
+let adEma = 16.7, adLast = 0, adCool = 0, adCap = 9, adCapT = 0;
 function adaptRes(ts) {
 const maxPR = Math.min(window.devicePixelRatio || 1, 2), minPR = Math.min(maxPR, 1.0);   /* never below 1 CSS pixel = 1 device pixel */
 if (!(ST.get('motionEnabled') || trActive || mSettle)) {
 adLast = 0;
-if (curPR < maxPR - 0.01) { curPR = maxPR; renderer.setPixelRatio(curPR); renderer.setSize(W(), H()); noiseU.uDpr.value = curPR; poke(500); }   /* full quality as soon as motion stops */
+if (curPR < maxPR - 0.01) { curPR = maxPR; renderer.setPixelRatio(curPR); renderer.setSize(W(), H()); noiseU.uDpr.value = curPR; renderFrame(); poke(500); }   /* full quality as soon as motion stops */
 return;
 }
 if (adLast) adEma = adEma * 0.92 + Math.min(60, ts - adLast) * 0.08;
 adLast = ts;
 if (ts < adCool) return;
 let np = curPR;
-if (adEma > 30 && curPR > minPR + 0.01) np = Math.max(minPR, curPR * 0.88);
-else if (adEma < 17.5 && curPR < maxPR) np = Math.min(maxPR, curPR * 1.15);
+if (ts > adCapT) adCap = 9;
+if (adEma > 30 && curPR > minPR + 0.01) { np = Math.max(minPR, curPR * 0.88); adCap = np; adCapT = ts + 60000; }
+else if (adEma < 17.5 && curPR < Math.min(maxPR, adCap) - 0.01) np = Math.min(maxPR, adCap, curPR * 1.15);
 if (Math.abs(np - curPR) > 0.01) {
-curPR = np; renderer.setPixelRatio(curPR); renderer.setSize(W(), H()); noiseU.uDpr.value = curPR;
-adCool = ts + 900; adEma = 16.7;
+curPR = np; renderer.setPixelRatio(curPR); renderer.setSize(W(), H()); noiseU.uDpr.value = curPR; renderFrame();
+adCool = ts + 2500; adEma = 16.7;
 }
 }
 let mLt = 0, mLast = 0, mLin = 0, mAng = 0, mVel = 0, mPh = 0, mSettle = false;
